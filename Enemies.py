@@ -13,7 +13,7 @@ class Enemy(pygame.sprite.Sprite):
         self.image = pygame.transform.rotate(self.image, -90)
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
-        self.speed = random.randint(4, 8)
+        self.speed = random.randint(4, 5)
     #     self.can = True
     #
     # def can_move(self):
@@ -27,7 +27,7 @@ class Enemy(pygame.sprite.Sprite):
 
         self.target_x = self.x
         self.target_y = self.y
-        self.move_delay = 10  # Задержка перед новым движением (в кадрах)
+        self.move_delay = 30  # Задержка перед новым движением (в кадрах)
         self.move_timer = 0
 
     def update(self):
@@ -39,8 +39,10 @@ class Enemy(pygame.sprite.Sprite):
         self.move_towards_target()
 
     def set_new_target(self):
-        self.target_x = random.randint(10, self.size[0] - 10)
-        self.target_y = random.randint(20, 300)
+        self.target_x = random.randint(pygame.mouse.get_pos()[0] - 250, pygame.mouse.get_pos()[0] + 250)
+        # self.target_x = random.randint(1, self.size[0] - 10)
+        self.target_y = random.randint(10, self.size[1] - 190)
+
 
     def move_towards_target(self):
         dx = self.target_x - self.rect.centerx

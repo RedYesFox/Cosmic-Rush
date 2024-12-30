@@ -1,6 +1,7 @@
 import pygame
 from Hero import Hero
 from Enemies import Enemy
+from pause import PauseMenu
 
 if __name__ == '__main__':
     pygame.init()
@@ -22,25 +23,34 @@ if __name__ == '__main__':
 
     clock = pygame.time.Clock()
     running = True
+    paused = False
+
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            if event.type == pygame.MOUSEMOTION:
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    paused = not paused
+                if event.key == pygame.K_e:
+                    running = False
+            if paused == False and event.type == pygame.MOUSEMOTION:
                 player.move(event.pos[0])
 
-        # if enemy.can:
-        #     enemy.move()
-
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_ESCAPE]:
-            pygame.display.toggle_fullscreen()
         if keys[pygame.K_g]:
             all_sprites.add(Enemy(size))
 
-        all_sprites.update()
+        if not paused:
+            pygame.mouse.set_visible(False)
+            all_sprites.update()
         screen.blit(BACKGROUND_IMG, (0, 0))
         all_sprites.draw(screen)
+
+        if paused:
+            pygame.mouse.set_visible(True)
+            PauseMenu.draw_pause_menu(screen, size)
+
         pygame.display.flip()
 
         clock.tick(60)

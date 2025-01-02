@@ -23,12 +23,16 @@ if __name__ == '__main__':
     pause_menu = PauseMenu(screen, size)
     start_menu = StartMenu(screen, size)
 
-    cursor_img = pygame.image.load('icons/rocket_white.png').convert_alpha()
-    cursor_img = pygame.transform.rotate(cursor_img, 90)
-    cursor_img = pygame.transform.scale(cursor_img, (40, 40))
-    cursor = pygame.cursors.Cursor((0, 0), cursor_img)
-    pygame.mouse.set_cursor(cursor)
-    # pygame.mouse.set_visible(False)
+    cursor1_img = pygame.image.load('icons/rocket_white.png').convert_alpha()
+    cursor1_img = pygame.transform.rotate(cursor1_img, 90)
+    cursor1_img = pygame.transform.scale(cursor1_img, (40, 40))
+    cursor1 = pygame.cursors.Cursor((0, 0), cursor1_img)
+    pygame.mouse.set_cursor(cursor1)
+
+    cursor2_img = pygame.image.load('icons/rocket_fiolet.png').convert_alpha()
+    cursor2_img = pygame.transform.rotate(cursor2_img, 45)
+    cursor2_img = pygame.transform.scale(cursor2_img, (50, 50))
+    cursor2 = pygame.cursors.Cursor((0, 0), cursor2_img)
 
     all_sprites.add(player)
     all_sprites.add(enemy)
@@ -50,7 +54,10 @@ if __name__ == '__main__':
             if event.type == pygame.MOUSEMOTION and paused == False and start_menu_opened == False:
                 player.move(event.pos[0])
             if event.type == pygame.MOUSEBUTTONDOWN:
-                pass
+                if start_menu.start_game_button().collidepoint(pygame.mouse.get_pos()):
+                    start_menu_opened = False
+                    paused = False
+                    pygame.mouse.set_visible(True)
 
         keys = pygame.key.get_pressed()
         if keys[pygame.K_g]:
@@ -68,10 +75,10 @@ if __name__ == '__main__':
 
         if start_menu_opened:
             start_menu.draw_start_menu()
-            if start_menu.start_game_button.collidepoint(pygame.mouse.get_pos()):
-                start_menu_opened = False
-                paused = False
-                pygame.mouse.set_visible(True)
+            if start_menu.start_game_button().collidepoint(pygame.mouse.get_pos()):
+                pygame.mouse.set_cursor(cursor2)
+            else:
+                pygame.mouse.set_cursor(cursor1)
 
         pygame.display.flip()
 

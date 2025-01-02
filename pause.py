@@ -1,5 +1,5 @@
 import pygame
-from Settings import PAUSE_FONT
+from Settings import PAUSE_FONT1
 
 
 class PauseMenu:
@@ -8,9 +8,9 @@ class PauseMenu:
         self.width, self.height = self.size = size
 
     def draw_pause_menu(self):
-        menu_text = PAUSE_FONT.render("ПАУЗА", True, (180, 180, 180))
-        resume_text = PAUSE_FONT.render("Нажмите ESC для продолжения", True, (180, 180, 180))
-        quit_text = PAUSE_FONT.render("Нажмите E для выхода", True, (180, 180, 180))
+        menu_text = PAUSE_FONT1.render("ПАУЗА", True, (180, 180, 180))
+        resume_text = PAUSE_FONT1.render("Нажмите ESC для продолжения", True, (180, 180, 180))
+        quit_text = PAUSE_FONT1.render("Нажмите E для выхода", True, (180, 180, 180))
         bg_color = (0, 0, 0, 190)
         surface = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
         surface.fill(bg_color)

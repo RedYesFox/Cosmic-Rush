@@ -31,7 +31,8 @@ if WINDOW_SIZE >= device_size:
 START_BG_IMAGE = pygame.image.load('images/StartBG.png')
 MAIN_BG_IMAGE = pygame.image.load('images/background.png')
 
-PAUSE_FONT = pygame.font.Font(None, 45)
+PAUSE_FONT1 = pygame.font.Font(None, 45)
+PAUSE_FONT2 = pygame.font.Font(None, 30)
 START_FONT = pygame.font.Font("fonts/RubikGlitch-Regular.ttf", 50)
 FONT = pygame.font.Font("fonts/Sixtyfour-Regular-VariableFont_BLED,SCAN.ttf", 45)
 
@@ -44,6 +45,12 @@ cursor2_img = pygame.image.load('icons/highlight_mouse_cursor.png')
 cursor2_img = pygame.transform.rotate(cursor2_img, 45)
 cursor2_img = pygame.transform.scale(cursor2_img, (60, 60))
 cursor2 = pygame.cursors.Cursor((0, 0), cursor2_img)
+
+point = pygame.image.load('icons/point_scan.png')
+point = pygame.transform.scale(point, (30, 30))
+
+settings_icon = pygame.image.load('icons/settings.png')
+settings_icon = pygame.transform.scale(settings_icon, (50, 50))
 
 # Сохранение только последнего результата в txt файле
 def save_result(score):

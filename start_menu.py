@@ -1,5 +1,5 @@
 import pygame
-from Settings import START_FONT, START_BG_IMAGE
+from Settings import START_FONT, START_BG_IMAGE, settings_icon
 
 
 class StartMenu:
@@ -20,9 +20,16 @@ class StartMenu:
 
 
         self.start_game_text = START_FONT.render("Начать игру", True, (255, 255, 255))
-        self.button_x = self.width // 12
-        self.button_y = self.height - 300
-        self.screen.blit(self.start_game_text, (self.button_x, self.button_y))
+        self.button_start_x = self.width // 12
+        self.button_start_y = self.height - 300
+        self.screen.blit(self.start_game_text, (self.button_start_x, self.button_start_y))
+
+        self.button_settings_x = self.width - 70
+        self.button_settings_y = 20
+        self.screen.blit(settings_icon, (self.button_settings_x, self.button_settings_y))
 
     def start_game_button(self):
-        return self.start_game_text.get_rect(topleft=(self.button_x, self.button_y))
+        return self.start_game_text.get_rect(topleft=(self.button_start_x, self.button_start_y))
+
+    def settings_button(self):
+        return settings_icon.get_rect(topleft=(self.button_settings_x, self.button_settings_y))

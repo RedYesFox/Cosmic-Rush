@@ -1,172 +1,82 @@
 import pygame
-import random
+from Hero import Hero
+from Enemies import Enemy
+from Settings import MAIN_BG_IMAGE, cursor1, cursor2
+from pause import PauseMenu
+from start_menu import StartMenu
 
-# Инициализация Pygame
-pygame.init()
 
-# Настройки экрана
-WIDTH = 800
-HEIGHT = 600
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Castle Defense")
+def main():
 
-# Цвета
-WHITE = (255, 255, 255)
-BLACK = (0, 0, 0)
-RED = (255, 0, 0)
-BLUE = (0, 0, 255)
-GREEN = (0, 255, 0)
+    device_width, device_height = pygame.display.get_desktop_sizes()[0]
+    size = width, height = device_width - 400, device_height - 300
+    screen = pygame.display.set_mode(size)
+    pygame.display.set_caption("Cosmic Rush")
+    pygame.mouse.set_pos(width // 2 - 90, height // 2)
+    pygame.mouse.set_cursor(cursor1)
 
-# Шрифт для отображения счета и здоровья
-font = pygame.font.Font(None, 36)
+    all_sprites = pygame.sprite.Group()
+    player = Hero(size)
+    enemy = Enemy(size)
 
-# Герой
-class Hero(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__()
-        self.image = pygame.Surface((50, 50))
-        self.image.fill(BLUE)
-        self.rect = self.image.get_rect()
-        self.rect.center = (100, HEIGHT // 2)
-        self.health = 100
+    pause_menu = PauseMenu(screen, size)
+    start_menu = StartMenu(screen, size)
 
-# Катапульта
-class Catapult(pygame.sprite.Sprite):
-    def __init__(self, hero):
-        super().__init__()
-        self.image = pygame.Surface((30, 30))
-        self.image.fill(GREEN)
-        self.rect = self.image.get_rect()
-        self.hero = hero
-        self.update_position()
+    all_sprites.add(player)
+    all_sprites.add(enemy)
 
-    def update_position(self):
-        self.rect.center = (self.hero.rect.right + 20, self.hero.rect.centery)
+    clock = pygame.time.Clock()
+    running = True
+    paused = False
+    start_menu_opened = True
 
-# Зомби
-class Zombie(pygame.sprite.Sprite):
-    def __init__(self, speed):
-        super().__init__()
-        self.image = pygame.Surface((40, 40))
-        self.image.fill(RED)
-        self.rect = self.image.get_rect()
-        self.rect.right = WIDTH
-        self.rect.y = random.randint(0, HEIGHT - self.rect.height)
-        self.speed = speed
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE and start_menu_opened == False:
+                    paused = not paused
+                if event.key == pygame.K_e:
+                    running = False
+            if event.type == pygame.MOUSEMOTION:
+                if paused == False and start_menu_opened == False:
+                    player.move(event.pos[0])
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                if start_menu.start_game_button().collidepoint(pygame.mouse.get_pos()):
+                    start_menu_opened = False
+                    paused = False
 
-    def update(self):
-        self.rect.x -= self.speed
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_g]:
+            all_sprites.add(Enemy(size))
 
-# Снаряд
-class Projectile(pygame.sprite.Sprite):
-    def __init__(self, x, y):
-        super().__init__()
-        self.image = pygame.Surface((10, 10))
-        self.image.fill(BLACK)
-        self.rect = self.image.get_rect()
-        self.rect.center = (x, y)
-        self.speed = 5
+        if not paused and not start_menu_opened:
+            pygame.mouse.set_visible(False)
+            all_sprites.update()
+        screen.blit(MAIN_BG_IMAGE, (0, 0))
+        all_sprites.draw(screen)
 
-    def update(self):
-        self.rect.x += self.speed
+        if paused and not start_menu_opened:
+            pygame.mouse.set_cursor(cursor1)
+            pygame.mouse.set_visible(True)
+            pause_menu.draw_pause_menu()
 
-# Группы спрайтов
-all_sprites = pygame.sprite.Group()
-zombies = pygame.sprite.Group()
-projectiles = pygame.sprite.Group()
+        if start_menu_opened:
+            start_menu.draw_start_menu()
+            rect1 = pygame.rect.Rect(*pygame.mouse.get_pos(), 40, 40)
+            if start_menu.start_game_button().colliderect(rect1):
+                pygame.mouse.set_cursor(cursor2)
+            else:
+                pygame.mouse.set_cursor(cursor1)
 
-hero = Hero()
-catapult = Catapult(hero)
-all_sprites.add(hero, catapult)
+        pygame.display.flip()
 
-# Игровые переменные
-score = 0
-level = 1
-zombie_speed = 1
-zombie_spawn_rate = 120  # Каждые 2 секунды (120 кадров)
+        clock.tick(60)
 
-# Игровой цикл
-running = True
-clock = pygame.time.Clock()
-zombie_spawn_timer = 0
+    pygame.quit()
 
-def draw_text(text, x, y):
-    text_surface = font.render(text, True, BLACK)
-    screen.blit(text_surface, (x, y))
 
-while running:
-    # Обработка событий
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
-                projectile = Projectile(catapult.rect.centerx, catapult.rect.centery)
-                all_sprites.add(projectile)
-                projectiles.add(projectile)
-
-    # Обновление
-    keys = pygame.key.get_pressed()
-    if keys[pygame.K_UP]:
-        hero.rect.y -= 5
-    if keys[pygame.K_DOWN]:
-        hero.rect.y += 5
-    
-    hero.rect.clamp_ip(screen.get_rect())
-    catapult.update_position()
-
-    # Создание зомби
-    zombie_spawn_timer += 1
-    if zombie_spawn_timer >= zombie_spawn_rate:
-        zombie = Zombie(zombie_speed)
-        all_sprites.add(zombie)
-        zombies.add(zombie)
-        zombie_spawn_timer = 0
-
-    # Обновление спрайтов
-    all_sprites.update()
-
-    # Проверка столкновений
-    for projectile in projectiles:
-        zombie_hits = pygame.sprite.spritecollide(projectile, zombies, True)
-        if zombie_hits:
-            projectile.kill()
-            score += 10
-
-    # Проверка столкновений героя с зомби
-    zombie_hits = pygame.sprite.spritecollide(hero, zombies, True)
-    if zombie_hits:
-        hero.health -= 10
-        if hero.health <= 0:
-            running = False
-
-    # Увеличение сложности
-    if score >= level * 100:
-        level += 1
-        zombie_speed += 0.5
-        zombie_spawn_rate = max(30, zombie_spawn_rate - 10)
-
-    # Отрисовка
-    screen.fill(WHITE)
-    all_sprites.draw(screen)
-    
-    # Отображение счета, уровня и здоровья
-    draw_text(f"Score: {score}", 10, 10)
-    draw_text(f"Level: {level}", 10, 50)
-    draw_text(f"Health: {hero.health}", WIDTH - 150, 10)
-
-    pygame.display.flip()
-
-    # Ограничение FPS
-    clock.tick(60)
-
-# Отображение экрана Game Over
-screen.fill(WHITE)
-draw_text("GAME OVER", WIDTH // 2 - 100, HEIGHT // 2 - 50)
-draw_text(f"Final Score: {score}", WIDTH // 2 - 100, HEIGHT // 2 + 50)
-pygame.display.flip()
-
-# Ожидание перед закрытием игры
-pygame.time.wait(3000)
-
-pygame.quit()
+if __name__ == '__main__':
+    pygame.init()
+    main()

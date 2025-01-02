@@ -1,4 +1,5 @@
 import pygame
+from Settings import START_FONT, START_BG_IMAGE
 
 
 class StartMenu:
@@ -7,11 +8,9 @@ class StartMenu:
         self.width, self.height = self.size = size
 
     def draw_start_menu(self):
-        menu_font = pygame.font.Font("fonts/Sixtyfour-Regular-VariableFont_BLED,SCAN.ttf", 45)
-        menu_text = menu_font.render("Cosmic Rush", True, (255, 255, 255))
-        bg_img = pygame.image.load('images/StartBg.png')
-        self.screen.blit(bg_img, (0, 0))
-        self.screen.blit(menu_text, (self.width // 2 - menu_text.get_width() // 2, 100))
+        game_title_text = START_FONT.render("Cosmic Rush", True, (255, 255, 255))
+        self.screen.blit(START_BG_IMAGE, (0, 0))
+        self.screen.blit(game_title_text, (self.width // 2 - game_title_text.get_width() // 2, 100))
 
         bg_color = (0, 0, 0, 160)
         surface = pygame.Surface((self.width * 3, self.height), pygame.SRCALPHA)
@@ -20,9 +19,8 @@ class StartMenu:
         self.screen.blit(surface, (-350, 200))
 
 
-        start_game_font = pygame.font.Font("fonts/KellySlab-Regular.ttf", 50)
-        self.start_game_text = start_game_font.render("Начать игру", True, (255, 255, 255))
-        self.button_x = self.width // 4 - self.start_game_text.get_width()
+        self.start_game_text = START_FONT.render("Начать игру", True, (255, 255, 255))
+        self.button_x = self.width // 12
         self.button_y = self.height - 300
         self.screen.blit(self.start_game_text, (self.button_x, self.button_y))
 

@@ -12,8 +12,8 @@ class Bullet(pygame.sprite.Sprite):
         self.rect.center = pos
         self.speed = 7
 
+
     def update(self):
-        super().update()
         self.rect.y -= self.speed
         if self.rect.y < 0:
             self.kill()

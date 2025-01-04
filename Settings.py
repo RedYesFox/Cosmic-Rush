@@ -18,6 +18,7 @@ pygame.mixer.music.play(-1)
 pygame.mixer.music.set_volume(50)
 click_effect = pygame.mixer.Sound('sounds/laser-gun-beam-blaster-shot_fjfjpfvu.mp3')
 shot_effect = pygame.mixer.Sound('sounds/laser_shot.mp3')
+button_focused = pygame.mixer.Sound('sounds/mouse_click.mp3')
 
 START_BG_IMAGE = pygame.image.load('images/StartBG.png')
 MAIN_BG_IMAGE = pygame.image.load('images/background.png')

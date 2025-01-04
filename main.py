@@ -6,20 +6,21 @@ from Hero import Hero
 from Bullet import Bullet
 import Settings
 from Settings import MAIN_BG_IMAGE, cursor1, cursor2, FPS, WINDOW_SIZE, WINDOW_HEIGHT, WINDOW_WIDTH, click_effect, \
-    shot_effect
+    shot_effect, button_focused
 from SettingsMenu import SettingsMenu
 from pause import PauseMenu
 from start_menu import StartMenu
 
 
 def main():
-
     screen = pygame.display.set_mode(WINDOW_SIZE)
     pygame.display.set_caption("Cosmic Rush")
     pygame.mouse.set_pos(WINDOW_WIDTH // 2 - 90, WINDOW_HEIGHT // 2)
     pygame.mouse.set_cursor(cursor1)
 
+    enemies = pygame.sprite.Group()
     all_sprites = pygame.sprite.Group()
+    bullets = pygame.sprite.Group()
     player = Hero(screen, WINDOW_SIZE)
     enemy = Enemy(WINDOW_SIZE)
 
@@ -29,18 +30,20 @@ def main():
     settings_menu = SettingsMenu(screen, WINDOW_SIZE)
 
     all_sprites.add(player)
-    all_sprites.add(enemy)
+    enemies.add(enemy)
 
     clock = pygame.time.Clock()
     running = True
     paused = False
     start_menu_opened = True
     settings_menu_opened = False
+    spawn_delay = 30
+    spawn_timer = 0
 
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                running = False
+                paused = True
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     paused = not paused
@@ -53,19 +56,30 @@ def main():
                     if event.buttons[0]:
                         if settings_menu.slider_rect.collidepoint(event.pos):
                             settings_menu.handle_rect.centerx = event.pos[0]
-                            settings_menu.update_volume(settings_menu.handle_rect.centerx - settings_menu.slider_rect.left)
+                            settings_menu.update_volume(
+                                settings_menu.handle_rect.centerx - settings_menu.slider_rect.left)
+
                 if paused == False and start_menu_opened == False:
                     player.move(event.pos[0])
+
+                if settings_menu_opened:
+                    if settings_menu.toggle_button().collidepoint(pygame.mouse.get_pos()):
+                        button_focused.play()
+
+                if paused:
+                    if pause_menu.settings_button().collidepoint(pygame.mouse.get_pos()):
+                        button_focused.play()
+
+                if start_menu_opened:
+                    if start_menu.start_game_button().collidepoint(pygame.mouse.get_pos()):
+                        button_focused.play()
+                    if start_menu.settings_button().collidepoint(pygame.mouse.get_pos()):
+                        button_focused.play()
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if Settings.blaster_sound and (start_menu_opened or settings_menu_opened or paused):
                     click_effect.play()
-                if not any([start_menu_opened, settings_menu_opened, paused]):
-                    shot_effect.play()
-                    all_sprites.add(Bullet(screen, WINDOW_SIZE, player.shot()))
+
                 if settings_menu_opened:
-                    if settings_menu.handle_rect.collidepoint(event.pos):
-                        settings_menu.handle_rect.centerx = event.pos[0]
-                        settings_menu.update_volume(settings_menu.handle_rect.centerx - settings_menu.slider_rect.left)
                     if settings_menu.toggle_button().collidepoint(pygame.mouse.get_pos()):
                         Settings.blaster_sound = not Settings.blaster_sound
 
@@ -80,10 +94,19 @@ def main():
                     if start_menu.settings_button().collidepoint(pygame.mouse.get_pos()):
                         settings_menu_opened = not settings_menu_opened
 
-        # keys = pygame.key.get_pressed()
-        # if keys[pygame.K_g]:
-        #     # all_sprites.add(Enemy(WINDOW_SIZE))
-        #     print(pygame.sprite.col)
+        mouse_buttons = pygame.mouse.get_pressed()
+        if mouse_buttons[0]:
+            if not any([start_menu_opened, settings_menu_opened, paused]):
+                if spawn_timer >= spawn_delay:
+                    shot_effect.play()
+                    bullet = Bullet(screen, WINDOW_SIZE, player.shot())
+                    all_sprites.add(bullet)
+                    bullets.add(bullet)
+                    spawn_timer = 0
+
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_g]:
+            enemies.add(Enemy(WINDOW_SIZE))
 
         if settings_menu.handle_rect.centerx < settings_menu.slider_rect.left:
             settings_menu.handle_rect.centerx = settings_menu.slider_rect.left
@@ -93,9 +116,17 @@ def main():
         if not paused and not start_menu_opened:
             settings_menu_opened = False
             pygame.mouse.set_visible(False)
+            for bullet in bullets:
+                enemy_hit = pygame.sprite.spritecollide(bullet, enemies, True)
+                if enemy_hit:
+                    bullet.kill()
+                    Settings.score += 10
+                    print(Settings.score)
             all_sprites.update()
+            enemies.update()
         screen.blit(MAIN_BG_IMAGE, (0, 0))
         all_sprites.draw(screen)
+        enemies.draw(screen)
 
         if paused and not start_menu_opened:
             pygame.mouse.set_cursor(cursor1)
@@ -120,6 +151,7 @@ def main():
             pygame.draw.rect(screen, (50, 50, 50), settings_menu.slider_rect)
             pygame.draw.rect(screen, (255, 255, 255), settings_menu.handle_rect)
 
+        spawn_timer += 1
         pygame.display.flip()
 
         clock.tick(FPS)

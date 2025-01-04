@@ -6,6 +6,11 @@ class StartMenu:
     def __init__(self, screen, size):
         self.screen = screen
         self.width, self.height = self.size = size
+        self.start_game_text = START_FONT.render("Начать игру", True, (255, 255, 255))
+        self.button_start_x = self.width // 12
+        self.button_start_y = self.height - 300
+        self.button_settings_x = self.width - 70
+        self.button_settings_y = 20
 
     def draw_start_menu(self):
         game_title_text = START_FONT.render("Cosmic Rush", True, (255, 255, 255))
@@ -18,14 +23,7 @@ class StartMenu:
         surface = pygame.transform.rotate(surface, -25)
         self.screen.blit(surface, (-350, 200))
 
-
-        self.start_game_text = START_FONT.render("Начать игру", True, (255, 255, 255))
-        self.button_start_x = self.width // 12
-        self.button_start_y = self.height - 300
         self.screen.blit(self.start_game_text, (self.button_start_x, self.button_start_y))
-
-        self.button_settings_x = self.width - 70
-        self.button_settings_y = 20
         self.screen.blit(settings_icon, (self.button_settings_x, self.button_settings_y))
 
     def start_game_button(self):

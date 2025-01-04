@@ -1,32 +1,23 @@
-import os, sys
 import pygame
 
 pygame.init()
-
-# def load_image(name, colorkey=None, folder='images'):
-#     fullname = os.path.join(folder, name)
-#     if not os.path.isfile(fullname):
-#         print(f"Файл с изображением '{fullname}' не найден")
-#         sys.exit()
-#     image = pygame.image.load(fullname)
-#     if colorkey is not None:
-#         image = image.convert()
-#         if colorkey == -1:
-#             colorkey = image.get_at((0, 0))
-#         image.set_colorkey(colorkey)
-#     else:
-#         image = image.convert_alpha()
-#     return image
 
 FPS = 60
 LVL = 0
 HEALTH = 100
 score = 0
+blaster_sound = True
 
 device_size = device_width, device_height = pygame.display.get_desktop_sizes()[0]
-WINDOW_SIZE = WINDOW_WIDTH, WINDOW_HEIGHT = 1520, 780
+WINDOW_SIZE = WINDOW_WIDTH, WINDOW_HEIGHT = 1500, 800
 if WINDOW_SIZE >= device_size:
     WINDOW_SIZE = WINDOW_WIDTH, WINDOW_HEIGHT = device_size[0] - 100, device_size[1] - 100
+
+pygame.mixer.music.load('sounds/wait_music.mp3')
+pygame.mixer.music.play(-1)
+pygame.mixer.music.set_volume(50)
+click_effect = pygame.mixer.Sound('sounds/laser-gun-beam-blaster-shot_fjfjpfvu.mp3')
+shot_effect = pygame.mixer.Sound('sounds/laser_shot.mp3')
 
 START_BG_IMAGE = pygame.image.load('images/StartBG.png')
 MAIN_BG_IMAGE = pygame.image.load('images/background.png')
@@ -35,6 +26,12 @@ PAUSE_FONT1 = pygame.font.Font(None, 45)
 PAUSE_FONT2 = pygame.font.Font(None, 30)
 START_FONT = pygame.font.Font("fonts/RubikGlitch-Regular.ttf", 50)
 FONT = pygame.font.Font("fonts/Sixtyfour-Regular-VariableFont_BLED,SCAN.ttf", 45)
+
+HERO_IMG = pygame.image.load('images/plane.png')
+HERO_IMG = pygame.transform.scale(HERO_IMG, (100, 50))
+ENEMY_IMG = pygame.image.load('images/red_plane.png')
+ENEMY_IMG = pygame.transform.scale(ENEMY_IMG, (60, 60))
+ENEMY_IMG = pygame.transform.rotate(ENEMY_IMG, -90)
 
 cursor1_img = pygame.image.load('icons/rocket_white.png')
 cursor1_img = pygame.transform.rotate(cursor1_img, 90)
@@ -51,6 +48,12 @@ point = pygame.transform.scale(point, (30, 30))
 
 settings_icon = pygame.image.load('icons/settings.png')
 settings_icon = pygame.transform.scale(settings_icon, (50, 50))
+
+toggle_on_img = pygame.image.load('icons/toggle_on.png')
+toggle_on_img = pygame.transform.scale(toggle_on_img, (60, 60))
+toggle_off_img = pygame.image.load('icons/toggle_off.png')
+toggle_off_img = pygame.transform.scale(toggle_off_img, (60, 60))
+
 
 # Сохранение только последнего результата в txt файле
 def save_result(score):

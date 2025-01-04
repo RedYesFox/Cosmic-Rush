@@ -1,6 +1,9 @@
 import pygame
 import random
 
+from Settings import ENEMY_IMG
+
+
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, size):
         super().__init__()
@@ -8,12 +11,10 @@ class Enemy(pygame.sprite.Sprite):
         self.x = random.choice([random.randint(-100, 0), random.randint(self.size[0], self.size[0] + 100)])
         self.y = random.randint(60, 180)
         print(self.x, self.y)
-        self.image = pygame.image.load('images/red_plane.png').convert_alpha()
-        self.image = pygame.transform.scale(self.image, (60, 60))
-        self.image = pygame.transform.rotate(self.image, -90)
+        self.image = ENEMY_IMG
         self.rect = self.image.get_rect()
         self.rect.center = (self.x, self.y)
-        self.speed = random.randint(4, 5)
+        self.speed = random.randint(3, 5)
     #     self.can = True
     #
     # def can_move(self):

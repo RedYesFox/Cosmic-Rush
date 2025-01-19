@@ -1,4 +1,5 @@
 import pygame
+from pygame import FULLSCREEN
 
 from Enemies import Enemy
 from EscapeMenu import EscapeMenu
@@ -6,10 +7,27 @@ from Hero import Hero
 from Bullet import Bullet
 import Settings
 from Settings import MAIN_BG_IMAGE, cursor1, cursor2, FPS, WINDOW_SIZE, WINDOW_HEIGHT, WINDOW_WIDTH, click_effect, \
-    shot_effect, button_focused
+    shot_effect, button_focused, music_channel2, music_channel1, game_music, wait_music, start_btn_effect, VOLUME
 from SettingsMenu import SettingsMenu
-from pause import PauseMenu
-from start_menu import StartMenu
+from PauseMenu import PauseMenu
+from StartMenu import StartMenu
+
+focus = False
+last_focused_button = None
+
+
+def handle_button_focus(button, pos):
+    global focus, last_focused_button
+
+    if button.collidepoint(pos):
+        if not focus and button != last_focused_button:
+            button_focused.play()
+            focus = True
+            last_focused_button = button
+    else:
+        if button == last_focused_button:
+            focus = False
+            last_focused_button = None
 
 
 def main():
@@ -43,14 +61,17 @@ def main():
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                if settings_menu_opened:
+                    settings_menu_opened = False
                 paused = True
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     paused = not paused
-                    if settings_menu_opened:
-                        settings_menu_opened = False
+
                 if event.key == pygame.K_e:
-                    running = False
+                    if paused:
+                        Settings.save_result(Settings.score)
+                        running = False
             if event.type == pygame.MOUSEMOTION:
                 if settings_menu_opened:
                     if event.buttons[0]:
@@ -62,19 +83,20 @@ def main():
                 if paused == False and start_menu_opened == False:
                     player.move(event.pos[0])
 
+                if not paused and not start_menu_opened:
+                    player.move(event.pos[0])
+
                 if settings_menu_opened:
-                    if settings_menu.toggle_button().collidepoint(pygame.mouse.get_pos()):
-                        button_focused.play()
+                    handle_button_focus(settings_menu.toggle_button(), event.pos)
 
                 if paused:
-                    if pause_menu.settings_button().collidepoint(pygame.mouse.get_pos()):
-                        button_focused.play()
+                    handle_button_focus(pause_menu.settings_button(), event.pos)
+                    handle_button_focus(escape_menu.cancel_button(), event.pos)
 
                 if start_menu_opened:
-                    if start_menu.start_game_button().collidepoint(pygame.mouse.get_pos()):
-                        button_focused.play()
-                    if start_menu.settings_button().collidepoint(pygame.mouse.get_pos()):
-                        button_focused.play()
+                    handle_button_focus(start_menu.start_game_button(), event.pos)
+                    handle_button_focus(start_menu.settings_button(), event.pos)
+
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if Settings.blaster_sound and (start_menu_opened or settings_menu_opened or paused):
                     click_effect.play()
@@ -86,9 +108,12 @@ def main():
                 if paused:
                     if pause_menu.settings_button().collidepoint(pygame.mouse.get_pos()):
                         settings_menu_opened = not settings_menu_opened
+                    if escape_menu.cancel_button().collidepoint(pygame.mouse.get_pos()):
+                        paused = not paused
 
                 if start_menu_opened:
                     if start_menu.start_game_button().collidepoint(pygame.mouse.get_pos()):
+                        start_btn_effect.play()
                         start_menu_opened = False
                         paused = False
                     if start_menu.settings_button().collidepoint(pygame.mouse.get_pos()):
@@ -114,6 +139,15 @@ def main():
             settings_menu.handle_rect.centerx = settings_menu.slider_rect.right
 
         if not paused and not start_menu_opened:
+            if music_channel1.get_busy():
+                music_channel1.pause()
+                if not music_channel2.get_busy():
+                    music_channel2.play(game_music, loops=-1)
+                    music_channel2.set_volume(VOLUME)
+                else:
+                    music_channel2.unpause()
+
+
             settings_menu_opened = False
             pygame.mouse.set_visible(False)
             for bullet in bullets:
@@ -129,6 +163,14 @@ def main():
         enemies.draw(screen)
 
         if paused and not start_menu_opened:
+            if music_channel2.get_busy():
+                music_channel2.pause()
+                if not music_channel1.get_busy():
+                    music_channel1.play(wait_music, loops=-1)
+                else:
+                    music_channel1.unpause()
+
+
             pygame.mouse.set_cursor(cursor1)
             pygame.mouse.set_visible(True)
             pause_menu.draw_pause_menu()
@@ -137,14 +179,17 @@ def main():
             start_menu.draw_start_menu()
             rect1 = pygame.rect.Rect(*pygame.mouse.get_pos(), 40, 40)
             if start_menu.start_game_button().colliderect(rect1):
+                handle_button_focus(start_menu.start_game_button(), pygame.mouse.get_pos())
+                handle_button_focus(start_menu.settings_button(), pygame.mouse.get_pos())
                 pygame.mouse.set_cursor(cursor2)
             else:
                 pygame.mouse.set_cursor(cursor1)
 
         if paused and start_menu_opened and not settings_menu_opened:
-            pygame.mouse.set_cursor(cursor1)
-            pygame.mouse.set_visible(True)
             escape_menu.draw_escape_menu()
+        if paused and start_menu_opened and settings_menu_opened:
+            settings_menu_opened = False
+            paused = False
 
         if settings_menu_opened:
             settings_menu.draw_settings_menu()

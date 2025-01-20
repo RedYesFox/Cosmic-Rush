@@ -5,9 +5,11 @@ pygame.init()
 FPS = 60
 LVL = 0
 HEALTH = 100
-score = 0
+SHIELD = 100
+SCORE = 0
 blaster_sound = True
 VOLUME = 0.2
+# ENEMIES = round(LVL * 2.5)
 
 device_size = device_width, device_height = pygame.display.get_desktop_sizes()[0]
 WINDOW_SIZE = WINDOW_WIDTH, WINDOW_HEIGHT = 1500, 800
@@ -32,12 +34,15 @@ MAIN_BG_IMAGE = pygame.transform.scale(pygame.image.load('images/background.png'
 
 PAUSE_FONT1 = pygame.font.Font(None, 60)
 PAUSE_FONT2 = pygame.font.Font(None, 28)
-START_FONT = pygame.font.Font("fonts/RubikGlitch-Regular.ttf", 50)
-FONT = pygame.font.Font("fonts/Sixtyfour-Regular-VariableFont_BLED,SCAN.ttf", 45)
+START_FONT1 = pygame.font.Font("fonts/RubikGlitch-Regular.ttf", 50)
+START_FONT2 = pygame.font.Font("fonts/RubikGlitch-Regular.ttf", 30)
+FONT1 = pygame.font.Font("fonts/Sixtyfour-Regular-VariableFont_BLED,SCAN.ttf", 45)
+FONT2 = pygame.font.Font("fonts/RubikGlitch-Regular.ttf", 30)
 
 HERO_IMG = pygame.transform.scale(pygame.image.load('images/plane.png'), (100, 50))
 ENEMY_IMG = pygame.transform.scale(pygame.image.load('images/red_plane.png'), (60, 60))
 ENEMY_IMG = pygame.transform.rotate(ENEMY_IMG, -90)
+
 point = pygame.transform.scale(pygame.image.load('icons/point_scan.png'), (30, 30))
 
 cursor1_img = pygame.transform.rotate(pygame.image.load('icons/rocket_white.png'), 90)
@@ -55,18 +60,30 @@ cancel_button_img = pygame.transform.scale(pygame.image.load('icons/cancel.png')
 toggle_on_img = pygame.transform.scale(pygame.image.load('icons/toggle_on.png'), (60, 60))
 toggle_off_img = pygame.transform.scale(pygame.image.load('icons/toggle_off.png'), (60, 60))
 
+file_name = 'scores.txt'
+
 
 # Сохранение наилучшего результата в txt файле
-def save_result(score):
+# Для каждого устройства будет создаваться новый файл
+def save_result():
     try:
-        with open('scores.txt', encoding='utf-8') as file:
-            total_score = int(file.readlines()[0].strip())
-            total_lvl = int(file.readlines()[1])
+        with open(file_name, 'r') as file:
+            text = file.readlines()
+            total_score, total_lvl = int(text[0]), int(text[1])
     except:
-        with open('scores.txt', 'w', encoding='utf-8') as file:
+        with open(file_name, 'w', encoding='utf-8') as file:
             file.write("0\n0")
         total_score = 0
         total_lvl = 0
-    with open('scores.txt', 'w', encoding='utf-8') as file:
-        file.write(f'{max(total_score, score)}\n{min(total_lvl, LVL)}')
+    with open(file_name, 'w', encoding='utf-8') as file:
+        file.write(f'{max(total_score, SCORE)}\n{max(total_lvl, LVL)}')
 
+
+def read_results():
+    try:
+        with open(file_name, 'r', encoding='utf-8') as file:
+            text = file.readlines()
+            total_score, total_lvl = int(text[0]), int(text[1])
+    except:
+        return 0, 0
+    return total_score, total_lvl

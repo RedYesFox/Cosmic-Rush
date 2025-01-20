@@ -1,19 +1,27 @@
 import pygame
-from pygame import FULLSCREEN
-
 from Enemies import Enemy
 from EscapeMenu import EscapeMenu
 from Hero import Hero
 from Bullet import Bullet
 import Settings
 from Settings import MAIN_BG_IMAGE, cursor1, cursor2, FPS, WINDOW_SIZE, WINDOW_HEIGHT, WINDOW_WIDTH, click_effect, \
-    shot_effect, button_focused, music_channel2, music_channel1, game_music, wait_music, start_btn_effect, VOLUME
+    shot_effect, button_focused, music_channel2, music_channel1, game_music, wait_music, start_btn_effect, VOLUME, \
+    HEALTH, SHIELD, read_results
 from SettingsMenu import SettingsMenu
 from PauseMenu import PauseMenu
 from StartMenu import StartMenu
+from GameHud import Heart, Shield, Text
 
 focus = False
 last_focused_button = None
+
+
+def spawn_enemies():
+    num_enemies = round(Settings.LVL * 2.5)
+    new_enemies = pygame.sprite.Group()
+    for _ in range(num_enemies):
+        new_enemies.add(Enemy(WINDOW_SIZE))
+    return new_enemies
 
 
 def handle_button_focus(button, pos):
@@ -40,15 +48,16 @@ def main():
     all_sprites = pygame.sprite.Group()
     bullets = pygame.sprite.Group()
     player = Hero(screen, WINDOW_SIZE)
-    enemy = Enemy(WINDOW_SIZE)
 
     pause_menu = PauseMenu(screen, WINDOW_SIZE)
     start_menu = StartMenu(screen, WINDOW_SIZE)
     escape_menu = EscapeMenu(screen, WINDOW_SIZE)
     settings_menu = SettingsMenu(screen, WINDOW_SIZE)
+    heart = Heart(screen, WINDOW_SIZE)
+    shield = Shield(screen, WINDOW_SIZE)
+    texts = Text(screen, WINDOW_SIZE)
 
-    all_sprites.add(player)
-    enemies.add(enemy)
+    all_sprites.add(heart, shield, player)
 
     clock = pygame.time.Clock()
     running = True
@@ -57,6 +66,9 @@ def main():
     settings_menu_opened = False
     spawn_delay = 30
     spawn_timer = 0
+
+    enemies = spawn_enemies()
+    all_enemies_killed = False
 
     while running:
         for event in pygame.event.get():
@@ -70,7 +82,7 @@ def main():
 
                 if event.key == pygame.K_e:
                     if paused:
-                        Settings.save_result(Settings.score)
+                        Settings.save_result()
                         running = False
             if event.type == pygame.MOUSEMOTION:
                 if settings_menu_opened:
@@ -129,10 +141,6 @@ def main():
                     bullets.add(bullet)
                     spawn_timer = 0
 
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_g]:
-            enemies.add(Enemy(WINDOW_SIZE))
-
         if settings_menu.handle_rect.centerx < settings_menu.slider_rect.left:
             settings_menu.handle_rect.centerx = settings_menu.slider_rect.left
         elif settings_menu.handle_rect.centerx > settings_menu.slider_rect.right:
@@ -146,21 +154,30 @@ def main():
                     music_channel2.set_volume(VOLUME)
                 else:
                     music_channel2.unpause()
-
-
             settings_menu_opened = False
             pygame.mouse.set_visible(False)
+
+            if len(enemies) == 0 and not all_enemies_killed:
+                all_enemies_killed = True
+                Settings.LVL += 1
+                enemies = spawn_enemies()
+                enemies.add(enemies)
+
             for bullet in bullets:
-                enemy_hit = pygame.sprite.spritecollide(bullet, enemies, True)
-                if enemy_hit:
-                    bullet.kill()
-                    Settings.score += 10
-                    print(Settings.score)
+                enemy_hit = pygame.sprite.spritecollide(bullet, enemies, False)
+                for enemy in enemy_hit:
+                    if pygame.sprite.collide_mask(bullet, enemy):
+                        enemy.kill()
+                        bullet.kill()
+                        Settings.SCORE += 10
+                        print(Settings.SCORE)
+                        all_enemies_killed = False
             all_sprites.update()
             enemies.update()
         screen.blit(MAIN_BG_IMAGE, (0, 0))
         all_sprites.draw(screen)
         enemies.draw(screen)
+        texts.draw(HEALTH, SHIELD, Settings.LVL, Settings.SCORE)
 
         if paused and not start_menu_opened:
             if music_channel2.get_busy():
@@ -170,13 +187,12 @@ def main():
                 else:
                     music_channel1.unpause()
 
-
             pygame.mouse.set_cursor(cursor1)
             pygame.mouse.set_visible(True)
             pause_menu.draw_pause_menu()
 
         if start_menu_opened:
-            start_menu.draw_start_menu()
+            start_menu.draw_start_menu(*read_results())
             rect1 = pygame.rect.Rect(*pygame.mouse.get_pos(), 40, 40)
             if start_menu.start_game_button().colliderect(rect1):
                 handle_button_focus(start_menu.start_game_button(), pygame.mouse.get_pos())

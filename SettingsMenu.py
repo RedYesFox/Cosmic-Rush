@@ -1,5 +1,5 @@
 import pygame
-from Settings import PAUSE_FONT1, PAUSE_FONT2, toggle_on_img, toggle_off_img, VOLUME, music_channel1, music_channel2
+from Settings import PAUSE_FONT1, PAUSE_FONT2, toggle_on_img, toggle_off_img, music_channel1, music_channel2
 import Settings
 
 
@@ -15,7 +15,8 @@ class SettingsMenu:
         self.menu_text = PAUSE_FONT1.render("Настройки", True, (200, 200, 200))
         self.volume_text = PAUSE_FONT2.render("Громкость музыки", True, (200, 200, 200))
         self.blast_text = PAUSE_FONT2.render("Вкл/вкл звук нажатия", True, (200, 200, 200))
-        self.fullscreen_text = PAUSE_FONT2.render("В разработке **** Оконный/полноэкранный режим", True, (200, 200, 200))
+        self.fullscreen_text = PAUSE_FONT2.render("В разработке **** Оконный/полноэкранный режим", True,
+                                                  (200, 200, 200))
 
         bg_color = (0, 0, 0, 230)
         self.surface = pygame.Surface((self.width // 1.5, self.height // 1.5), pygame.SRCALPHA)
@@ -27,11 +28,13 @@ class SettingsMenu:
         music_channel2.set_volume(volume)
 
     def draw_settings_menu(self):
-        self.screen.blit(self.surface, ((self.width - self.surface.get_width()) // 2, (self.height - self.surface.get_height()) // 2))
+        self.screen.blit(self.surface,
+                         ((self.width - self.surface.get_width()) // 2, (self.height - self.surface.get_height()) // 2))
         self.screen.blit(self.menu_text, (self.width // 2 - self.menu_text.get_width() // 2, self.height // 2 - 70))
         self.screen.blit(self.volume_text, (self.width // 2 + self.volume_text.get_width() // 4, self.height // 2))
         self.screen.blit(self.blast_text, (self.width // 2 + self.blast_text.get_width() // 5, self.height // 2 + 70))
-        self.screen.blit(self.fullscreen_text, (self.width // 2 - self.fullscreen_text.get_width() // 3, self.height // 2 + 140))
+        self.screen.blit(self.fullscreen_text,
+                         (self.width // 2 - self.fullscreen_text.get_width() // 3, self.height // 2 + 140))
 
         if Settings.blaster_sound:
             self.screen.blit(toggle_on_img, (self.toggle_btn_x, self.toggle_btn_y))

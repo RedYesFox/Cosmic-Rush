@@ -16,8 +16,14 @@ focus = False
 last_focused_button = None
 
 
-def spawn_enemies():
-    num_enemies = round(Settings.LVL * 2.5)
+# def spawn_enemies():
+#     num_enemies = round(Settings.LVL * 2.5)
+#     new_enemies = pygame.sprite.Group()
+#     for _ in range(num_enemies):
+#         new_enemies.add(Enemy(WINDOW_SIZE))
+#     return new_enemies
+
+def spawn_enemies(num_enemies):
     new_enemies = pygame.sprite.Group()
     for _ in range(num_enemies):
         new_enemies.add(Enemy(WINDOW_SIZE))
@@ -67,8 +73,14 @@ def main():
     spawn_delay = 30
     spawn_timer = 0
 
-    enemies = spawn_enemies()
-    all_enemies_killed = False
+    wave_delay = 240  # 3 seconds at 60 FPS
+    wave_timer = 0
+    enemies_per_wave = 3
+    total_enemies_to_spawn = 0
+    level_started = False
+
+    # enemies = spawn_enemies()
+    # all_enemies_killed = False
 
     while running:
         for event in pygame.event.get():
@@ -157,11 +169,36 @@ def main():
             settings_menu_opened = False
             pygame.mouse.set_visible(False)
 
-            if len(enemies) == 0 and not all_enemies_killed:
-                all_enemies_killed = True
+            # if len(enemies) == 0 and not all_enemies_killed:
+            #     all_enemies_killed = True
+            #     Settings.LVL += 1
+            #     enemies.add(spawn_enemies())
+
+            # if len(enemies) == 0 and total_enemies_to_spawn == 0:
+            #     total_enemies_to_spawn = round(Settings.LVL * 2.5)
+            #     Settings.LVL += 1
+            #
+            # if total_enemies_to_spawn > 0 and wave_timer >= wave_delay:
+            #     num_to_spawn = min(enemies_per_wave, total_enemies_to_spawn)
+            #     new_enemies = spawn_enemies(num_to_spawn)
+            #     enemies.add(new_enemies)
+            #     total_enemies_to_spawn -= num_to_spawn
+            #     wave_timer = 0
+
+            if not level_started:
+                level_started = True
+                total_enemies_to_spawn = round(Settings.LVL * 2.5)
+
+            if len(enemies) == 0 and total_enemies_to_spawn == 0:
                 Settings.LVL += 1
-                enemies = spawn_enemies()
-                enemies.add(enemies)
+                level_started = False
+
+            if total_enemies_to_spawn > 0 and wave_timer >= wave_delay:
+                num_to_spawn = min(enemies_per_wave, total_enemies_to_spawn)
+                new_enemies = spawn_enemies(num_to_spawn)
+                enemies.add(new_enemies)
+                total_enemies_to_spawn -= num_to_spawn
+                wave_timer = 0
 
             for bullet in bullets:
                 enemy_hit = pygame.sprite.spritecollide(bullet, enemies, False)
@@ -213,6 +250,7 @@ def main():
             pygame.draw.rect(screen, (255, 255, 255), settings_menu.handle_rect)
 
         spawn_timer += 1
+        wave_timer += 1
         pygame.display.flip()
 
         clock.tick(FPS)

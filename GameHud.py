@@ -1,6 +1,6 @@
 import pygame
 
-from Settings import FONT2
+from Settings import FONT2, armor_img
 
 pygame.init()
 size_s = (60, 60)
@@ -31,8 +31,17 @@ class Shield(pygame.sprite.Sprite):
         self.rect = pygame.Rect(0, 0, 60, 60)
         self.rect = self.rect.move(270, 20)
 
-    def update(self):
-        pass
+
+class ArmorShield(pygame.sprite.Sprite):
+    def __init__(self, size, center_pos):
+        super().__init__()
+        self.size = size
+        self.image = armor_img
+        self.rect = self.image.get_rect(center=center_pos)
+
+    def move(self, pos):
+        if 10 < pos < self.size[0] - 100:
+            self.rect.centerx = pos
 
 
 class Text:

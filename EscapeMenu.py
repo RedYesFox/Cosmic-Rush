@@ -14,7 +14,6 @@ class EscapeMenu:
         self.resume_text = PAUSE_FONT2.render("Нажмите ESC для продолжения", True, (180, 180, 180))
         self.cancel_btn_x, self.cancel_btn_y = (((self.width * 7 - self.surface.get_width() * 3) // 6) - 80,
                                                 (self.height - self.surface.get_height()) // 2 + 40)
-        print((self.cancel_btn_x, self.cancel_btn_y))
 
     def draw_escape_menu(self):
         self.screen.blit(self.surface,

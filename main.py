@@ -9,7 +9,7 @@ from Explosion import Explosion
 import Settings
 from Settings import MAIN_BG_IMAGE, cursor1, cursor2, WINDOW_SIZE, WINDOW_HEIGHT, WINDOW_WIDTH, click_effect, \
     shot_effect, button_focused, music_channel2, music_channel1, game_music, wait_music, start_btn_effect, VOLUME, \
-    read_results, lose_effect
+    read_results, lose_effect, explosion_effect, enemy_shot, small_laser
 
 from SettingsMenu import SettingsMenu
 from PauseMenu import PauseMenu
@@ -44,50 +44,54 @@ def handle_button_focus(button, pos):  # Звук при фокусе кнопк
             last_focused_button = None
 
 
-def push_notice(LVL):  # Уведомлении о ЛВЛе
+def push_notice(lvl):  # Уведомлении о ЛВЛе
     notification.notify(
         title=" 🔔Cosmic Rush",
-        message=f"Новый Уровень❗\n        LVL: {LVL}",
+        message=f"Новый Уровень❗\n        LVL: {lvl}",
         timeout=5
     )
 
 
-def main():
-    pygame.display.set_caption("Cosmic Rush")
-    pygame.mouse.set_pos(WINDOW_WIDTH // 2 - 90, WINDOW_HEIGHT // 2)
+def start_window():
+    start_menu.draw_start_menu(*read_results())
+    rect1 = pygame.rect.Rect(*pygame.mouse.get_pos(), 40, 40)
+    if start_menu.start_game_button().colliderect(rect1):
+        handle_button_focus(start_menu.start_game_button(), pygame.mouse.get_pos())
+        handle_button_focus(start_menu.settings_button(), pygame.mouse.get_pos())
+        pygame.mouse.set_cursor(cursor2)
+    else:
+        pygame.mouse.set_cursor(cursor1)
+
+
+def pause_in_game():
+    if music_channel2.get_busy():
+        music_channel2.pause()
+        if not music_channel1.get_busy():
+            music_channel1.play(wait_music, loops=-1)
+        else:
+            music_channel1.unpause()
     pygame.mouse.set_cursor(cursor1)
+    pygame.mouse.set_visible(True)
+    pause_menu.draw_pause_menu()
 
-    enemies = pygame.sprite.Group()
-    all_sprites = pygame.sprite.Group()
-    bullets = pygame.sprite.Group()
-    enemy_bullets = pygame.sprite.Group()
 
-    player = Hero(screen, WINDOW_SIZE)
-    pause_menu = PauseMenu(screen, WINDOW_SIZE)
-    start_menu = StartMenu(screen, WINDOW_SIZE)
-    escape_menu = EscapeMenu(screen, WINDOW_SIZE)
-    settings_menu = SettingsMenu(screen, WINDOW_SIZE)
-    up_window = UpWindow(screen, WINDOW_SIZE)
-    heart = Heart(screen, WINDOW_SIZE)
-    shield = Shield(screen, WINDOW_SIZE)
-    texts = Text(screen, WINDOW_SIZE)
-    armor_shield = None
+# def restart_game():
 
-    all_sprites.add(heart, shield, player)
 
-    clock = pygame.time.Clock()
+def main():
     running = True
     paused = False
     start_menu_opened = True
     settings_menu_opened = False
+    game_over = False
 
     shield_activated = False
     shield_recovery = 35
     shield_delay = 5
     shield_timer = 0
 
-    spawn_delay = 30
-    spawn_timer = 0
+    shot_delay = 30
+    shot_timer = 0
 
     wave_delay = 240
     wave_timer = 0
@@ -95,12 +99,11 @@ def main():
     total_enemies_to_spawn = 0
     level_started = False
 
-    game_over_window = GameOverWindow(screen, WINDOW_SIZE)
-    game_over = False
-
     up_window_opened = False
     up_window_timer = 0
     up_window_delay = 90
+
+    armor_shield = None
 
     while running:
         for event in pygame.event.get():
@@ -146,6 +149,7 @@ def main():
                     if paused or game_over:
                         Settings.save_result()
                         running = False
+
                 if event.key == pygame.K_SPACE:
                     if not any([start_menu_opened, settings_menu_opened, paused, game_over]):
                         if Settings.SHIELD == 100:
@@ -155,11 +159,10 @@ def main():
 
             if event.type == pygame.MOUSEMOTION:
                 if settings_menu_opened:
-                    if event.buttons[0]:
-                        if settings_menu.slider_rect.collidepoint(event.pos):
-                            settings_menu.handle_rect.centerx = event.pos[0]
-                            settings_menu.update_volume(
-                                settings_menu.handle_rect.centerx - settings_menu.slider_rect.left)
+                    if event.buttons[0] and settings_menu.slider_rect.collidepoint(event.pos):
+                        settings_menu.handle_rect.centerx = event.pos[0]
+                        settings_menu.update_volume(
+                            settings_menu.handle_rect.centerx - settings_menu.slider_rect.left)
 
                 if not paused and not start_menu_opened and not game_over:
                     player.rect.centerx = event.pos[0]
@@ -202,22 +205,19 @@ def main():
                     if start_menu.settings_button().collidepoint(pygame.mouse.get_pos()):
                         settings_menu_opened = not settings_menu_opened
 
-        mouse_buttons = pygame.mouse.get_pressed()
-        if not any([start_menu_opened, settings_menu_opened, paused, game_over]):
-            if mouse_buttons[0]:
-                if spawn_timer >= spawn_delay:
-                    shot_effect.play()
-                    bullet = Bullet(screen, WINDOW_SIZE, player.shot())
-                    all_sprites.add(bullet)
-                    bullets.add(bullet)
-                    spawn_timer = 0
-
         if settings_menu.handle_rect.centerx < settings_menu.slider_rect.left:
             settings_menu.handle_rect.centerx = settings_menu.slider_rect.left
         elif settings_menu.handle_rect.centerx > settings_menu.slider_rect.right:
             settings_menu.handle_rect.centerx = settings_menu.slider_rect.right
 
-        if not paused and not start_menu_opened and not game_over:
+        if not any([start_menu_opened, settings_menu_opened, paused, game_over]):
+            if pygame.mouse.get_pressed()[0]:
+                if shot_timer >= shot_delay:
+                    shot_effect.play()
+                    bullet = Bullet(screen, WINDOW_SIZE, player.shot())
+                    all_sprites.add(bullet)
+                    bullets.add(bullet)
+                    shot_timer = 0
 
             if music_channel1.get_busy():
                 music_channel1.pause()
@@ -250,12 +250,14 @@ def main():
                 for enemy in enemy_hit:
                     if pygame.sprite.collide_mask(bullet, enemy):
                         all_sprites.add(Explosion(enemy.killed()))
+                        explosion_effect.play()
                         bullet.kill()
                         Settings.SCORE += 10
 
             for enemy in enemies:
                 enemy_bullet = enemy.shoot()
                 if enemy_bullet:
+                    enemy_shot.play()
                     enemy_bullets.add(enemy_bullet)
                     all_sprites.add(enemy_bullet)
 
@@ -278,20 +280,26 @@ def main():
                         Settings.SHIELD += 1
                         shield_timer = 0
 
+            if shield_activated:
+                if pygame.sprite.spritecollide(armor_shield, enemy_bullets, True, pygame.sprite.collide_mask):
+                    small_laser.play()
+
             if pygame.sprite.spritecollide(player, enemy_bullets, True, pygame.sprite.collide_mask):
-                if not shield_activated:
-                    Settings.HEALTH -= 10
+                Settings.HEALTH -= 10
+                small_laser.play()
                 if Settings.HEALTH <= 0:
                     game_over = True
                     lose_effect.play()
 
             all_sprites.update()
             enemies.update()
+
         screen.blit(MAIN_BG_IMAGE, (0, 0))
         all_sprites.draw(screen)
         enemies.draw(screen)
         enemy_bullets.draw(screen)
         texts.draw(Settings.HEALTH, Settings.SHIELD, Settings.LVL, Settings.SCORE)
+
         if up_window_opened:
             if up_window_timer < up_window_delay:
                 up_window.draw_up_window()
@@ -302,25 +310,10 @@ def main():
                 up_window_timer += 1
 
         if paused and not start_menu_opened:
-            if music_channel2.get_busy():
-                music_channel2.pause()
-                if not music_channel1.get_busy():
-                    music_channel1.play(wait_music, loops=-1)
-                else:
-                    music_channel1.unpause()
-            pygame.mouse.set_cursor(cursor1)
-            pygame.mouse.set_visible(True)
-            pause_menu.draw_pause_menu()
+            pause_in_game()
 
         if start_menu_opened:
-            start_menu.draw_start_menu(*read_results())
-            rect1 = pygame.rect.Rect(*pygame.mouse.get_pos(), 40, 40)
-            if start_menu.start_game_button().colliderect(rect1):
-                handle_button_focus(start_menu.start_game_button(), pygame.mouse.get_pos())
-                handle_button_focus(start_menu.settings_button(), pygame.mouse.get_pos())
-                pygame.mouse.set_cursor(cursor2)
-            else:
-                pygame.mouse.set_cursor(cursor1)
+            start_window()
 
         if paused and start_menu_opened and not settings_menu_opened:
             escape_menu.draw_escape_menu()
@@ -342,7 +335,7 @@ def main():
                     music_channel1.unpause()
             game_over_window.draw()
 
-        spawn_timer += 1
+        shot_timer += 1
         wave_timer += 1
         pygame.display.flip()
         clock.tick(60)
@@ -353,4 +346,26 @@ if __name__ == '__main__':
     pygame.init()
     pygame.mixer.init()
     screen = pygame.display.set_mode(WINDOW_SIZE)
+    pygame.display.set_caption("Cosmic Rush")
+    pygame.mouse.set_pos(WINDOW_WIDTH // 2 - 90, WINDOW_HEIGHT // 2)
+    pygame.mouse.set_cursor(cursor1)
+
+    clock = pygame.time.Clock()
+    player = Hero(screen, WINDOW_SIZE)
+    pause_menu = PauseMenu(screen, WINDOW_SIZE)
+    start_menu = StartMenu(screen, WINDOW_SIZE)
+    escape_menu = EscapeMenu(screen, WINDOW_SIZE)
+    settings_menu = SettingsMenu(screen, WINDOW_SIZE)
+    up_window = UpWindow(screen, WINDOW_SIZE)
+    heart = Heart(screen, WINDOW_SIZE)
+    shield = Shield(screen, WINDOW_SIZE)
+    texts = Text(screen, WINDOW_SIZE)
+    game_over_window = GameOverWindow(screen, WINDOW_SIZE)
+
+    enemies = pygame.sprite.Group()
+    all_sprites = pygame.sprite.Group()
+    bullets = pygame.sprite.Group()
+    enemy_bullets = pygame.sprite.Group()
+    all_sprites.add(heart, shield, player)
+
     main()

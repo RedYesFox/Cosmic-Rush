@@ -7,7 +7,7 @@ HEALTH = 100
 SHIELD = 100
 SCORE = 0
 blaster_sound = True
-VOLUME = 0.1
+VOLUME = 0.3
 file_name = 'scores.txt'
 
 
@@ -60,10 +60,19 @@ music_channel1.play(wait_music, loops=-1)
 music_channel1.set_volume(VOLUME)
 
 click_effect = pygame.mixer.Sound('sounds/click_mouse.mp3')
+click_effect.set_volume(0.3)
 lose_effect = pygame.mixer.Sound('sounds/game_over.mp3')
 shot_effect = pygame.mixer.Sound('sounds/laser_shot.mp3')
+shot_effect.set_volume(0.3)
+enemy_shot = pygame.mixer.Sound('sounds/laser_enemy.mp3')
+enemy_shot.set_volume(0.3)
+explosion_effect = pygame.mixer.Sound('sounds/strong-explosives.mp3')
+explosion_effect.set_volume(0.2)
+small_laser = pygame.mixer.Sound('sounds/small-laser.mp3')
+small_laser.set_volume(2)
 button_focused = pygame.mixer.Sound('sounds/focus_mouse.mp3')
 start_btn_effect = pygame.mixer.Sound('sounds/start_button.mp3')
+start_btn_effect.set_volume(0.3)
 
 START_BG_IMAGE = pygame.transform.scale(pygame.image.load('images/StartBG.png'), WINDOW_SIZE)
 MAIN_BG_IMAGE = pygame.transform.scale(pygame.image.load('images/background.png'), WINDOW_SIZE)
@@ -89,6 +98,7 @@ BULLET_IMGS = [
     pygame.transform.rotate(
         pygame.transform.flip(pygame.transform.scale(pygame.image.load('images/bullet_2.png'), (80, 20), ),
                               False, True), 90)]
+enemy_bullet = pygame.transform.scale(pygame.transform.rotate(pygame.image.load('images/13.png'), 90), (64, 40))
 armor_img = pygame.transform.scale(pygame.image.load('images/img.png'), (150, 150))
 
 point = pygame.transform.scale(pygame.image.load('icons/point_scan.png'), (30, 30))
